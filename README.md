@@ -19,10 +19,7 @@ arrival time, posterior distribution, etc.
 
 ## Installation
 
-First, clone this repository.
-```bash
-```
-Second, use pip to install the module.
+Clone this repository, then use pip to install the module.
 ```bash
 pip install ./fasttr
 ```
