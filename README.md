@@ -41,13 +41,13 @@ Then, to expose the new C++ node label to python, one needs add it to the binder
 
 ```
 ├── src
-    ├── bind_SamplableSetCR.hpp
+    ├── bind_fasttr.hpp
 ```
 
 To further wrap the new associated HistorySampler, it needs to be added to the python wrapper.
 
 ```
-├── SamplableSet
+├── fasttr
     ├── _wrapper.py
 ```
 
