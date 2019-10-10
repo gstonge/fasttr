@@ -10,7 +10,7 @@ the efficient sampling of histories, but also the calculation of node marginal
 arrival time, posterior distribution, etc.
 
 See the official python code on which this package is built :
-[temporal-recovery-tree-py](gcant/temporal-recovery-tree-py)
+[temporal-recovery-tree-py](https://github.com/gcant/temporal-recovery-tree-py)
 
 ## Requirements and dependencies
 
