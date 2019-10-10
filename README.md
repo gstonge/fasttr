@@ -1,13 +1,16 @@
 # Fast Temporal Recovery
 
 `fasttr` is an efficient package for the uniform sampling of histories of a
-graph growth. Its core is in C++, but it has a python interface, thanks to
+growing tree. Its core is in C++, but it has a python interface, thanks to
 [pybind11](https://github.com/pybind/pybind11).
 Sampling is also made efficient by the use of [SamplableSet](https://github.com/gstonge/SamplableSet).
 
 The principal element of the package is the class HistorySampler, that allow
 the efficient sampling of histories, but also the calculation of node marginal
 arrival time, posterior distribution, etc.
+
+See the official python code on which this package is built :
+[temporal-recovery-tree-py](gcant/temporal-recovery-tree-py)
 
 ## Requirements and dependencies
 
