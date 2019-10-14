@@ -12,6 +12,14 @@ arrival time, posterior distribution, etc.
 See the official python code on which this package is built :
 [temporal-recovery-tree-py](https://github.com/gcant/temporal-recovery-tree-py)
 
+## Reference
+
+If you use this code, please consider citing:
+
+"[*Recovering the past states of growing trees*](https://arxiv.org/abs/1910.04788)"<br/>
+[G. T. Cantwell](https://www.george-cantwell.com), [G. St-Onge](https://gstonge.github.io) and [J.-G. Young](http://jgyoung.ca)<br/>
+arxiv:1910.04788 (2019) <br/>
+
 ## Requirements and dependencies
 
 * A compiler with C++11 support
