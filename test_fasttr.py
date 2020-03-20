@@ -158,6 +158,8 @@ class TestPosterior:
             np.array([ln_history_probability(G, h, np.arange(100)**x)
                       for x in gamma_list]) for h in H])
 
+        print(log_posterior_python)
+        print(log_posterior_cpp.T)
         assert (np.abs(log_posterior_python - log_posterior_cpp.T)
                 <= 10**(-10)).all()
 

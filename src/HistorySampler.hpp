@@ -33,7 +33,7 @@ public:
             const std::unordered_map<Node,std::unordered_set<Node>>& adjacency_map,
             const std::vector<double>& kernel_vector,
             const std::vector<double>& grad_kernel_vector,
-            unsigned int seed = 42);
+            unsigned int seed = 42, double source_bias = 1, double sample_bias = 1);
 
     //Accessors
     const AdjacencyMap& get_adjacency() const
@@ -81,7 +81,10 @@ private:
     std::vector<History> history_vector_;
     std::vector<double> log_posterior_vector_; //for history
     std::vector<double> grad_log_posterior_vector_; //for history
+    std::vector<double> log_posterior_bias_vector_; //for history
     History ground_truth_;
+    double source_bias_;
+    double sample_bias_;
 
     //methods
     std::size_t compute_descendant(const Node& node);
@@ -97,13 +100,14 @@ HistorySampler<Node>::HistorySampler(
         const std::unordered_map<Node,std::unordered_set<Node>>& adjacency_map,
         const std::vector<double>& kernel_vector,
         const std::vector<double>& grad_kernel_vector,
-        unsigned int seed) :
+        unsigned int seed, double source_bias, double sample_bias) :
     adjacency_map_(adjacency_map),
     rooted_adjacency_map_(),
     kernel_vector_(kernel_vector),
     grad_kernel_vector_(grad_kernel_vector),
     n_(adjacency_map_.size()),
-    boundary_(1,n_,seed),
+    boundary_(std::min(1.,pow(n_,sample_bias)),
+            std::max(1.,pow(n_,sample_bias)),seed),
     source_(1,1,seed+1),
     root_(),
     rooted_(false),
@@ -111,7 +115,11 @@ HistorySampler<Node>::HistorySampler(
     probability_map_(),
     history_vector_(),
     log_posterior_vector_(),
-    ground_truth_()
+    grad_log_posterior_vector_(),
+    log_posterior_bias_vector_(),
+    ground_truth_(),
+    source_bias_(source_bias),
+    sample_bias_(sample_bias)
 {
     //first node is chosen as the source to determine the probability
     //of each node being the source
@@ -127,8 +135,9 @@ HistorySampler<Node>::HistorySampler(
 
     //normalize and determine min max prob
     double weight_sum = 0.;
-    for (const auto& element : probability_map_)
+    for (auto& element : probability_map_)
     {
+        element.second = pow(element.second,source_bias_);//apply bias
         weight_sum += element.second;
     }
     double min_probability = 1.;
@@ -148,7 +157,9 @@ HistorySampler<Node>::HistorySampler(
         }
     }
     //create samplable set for source
-    source_ = sset::SamplableSetCR<Node>(min_probability,max_probability,seed+1);
+    source_ = sset::SamplableSetCR<Node>(min_probability,
+            max_probability,
+            seed+1);
     for (const auto& element : probability_map_)
     {
         source_.insert(element.first,element.second);
@@ -246,12 +257,22 @@ void HistorySampler<Node>::compute_source_probability(const Node& node)
 template <typename Node>
 void HistorySampler<Node>::sample(std::size_t nb_sample)
 {
+    if (nb_sample <= 0)
+    {
+        throw std::runtime_error("The sample size must be superior to 0");
+    }
+
     history_vector_.clear();
+    log_posterior_bias_vector_.clear();
+    double log_posterior_bias; //log posterior prob for the history due to bias
     for (std::size_t i = 0; i < nb_sample; i++)
     {
+        log_posterior_bias = 0.;
         history_vector_.push_back(History());
         History& history = history_vector_[i];
-        Node source = (source_.sample()).first;
+        std::pair<Node,double> node_prob = source_.sample();
+        Node source = node_prob.first;
+        log_posterior_bias += log(node_prob.second);
         history.push_back(source);
         root(source);
         if (descendant_map_.count(source) == 0)
@@ -263,20 +284,23 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
         //add neighbors of root to boundary
         for (const auto& neighbor : rooted_adjacency_map_[source])
         {
-            boundary_.insert(neighbor, descendant_[neighbor]);
+            boundary_.insert(neighbor, pow(descendant_[neighbor],sample_bias_));
         }
         while (boundary_.size() > 0)
         {
-            Node node = (boundary_.sample()).first;
+            std::pair<Node,double> node_prob = boundary_.sample();
+            Node node = node_prob.first;
+            log_posterior_bias += log(node_prob.second);
             boundary_.erase(node);
             history.push_back(node);
             //add neighbors of node to boundary
             for (const auto& neighbor : rooted_adjacency_map_[node])
             {
-                boundary_.insert(neighbor, descendant_[neighbor]);
+                boundary_.insert(neighbor, pow(descendant_[neighbor],sample_bias_));
             }
         }
         unroot();
+        log_posterior_bias_vector_.push_back(log_posterior_bias);
     }
     //get the log probability associated with each history
     update_log_posterior();
@@ -332,13 +356,47 @@ std::pair<double,double> HistorySampler<Node>::compute_log_posterior(
 template <typename Node>
 void HistorySampler<Node>::update_log_posterior()
 {
+    if (history_vector_.size() <= 0)
+    {
+        throw std::runtime_error("The sample size must be superior to 0");
+    }
+
     log_posterior_vector_.clear();
     log_posterior_vector_.reserve(history_vector_.size());
-    //get log probability
-    for (const auto& history : history_vector_)
+    grad_log_posterior_vector_.clear();
+    grad_log_posterior_vector_.reserve(history_vector_.size());
+
+    //Transform log posterior bias vector such that
+    //the posterior bias sums to nb_sample.
+    //Hence without bias, each log_posterior_bias is null
+    double max_log_posterior_bias = log_posterior_bias_vector_[0];
+    for (const auto& log_posterior_bias : log_posterior_bias_vector_)
     {
-        std::pair<double,double> grad_log_prob_pair = compute_log_posterior(history);
-        log_posterior_vector_.push_back(grad_log_prob_pair.first);
+        if (log_posterior_bias >  max_log_posterior_bias)
+        {
+            max_log_posterior_bias = log_posterior_bias;
+        }
+    }
+    double total = 0.;
+    for (auto& log_posterior_bias : log_posterior_bias_vector_)
+    {
+        log_posterior_bias -= max_log_posterior_bias;
+        total += exp(log_posterior_bias);
+    }
+    double correction = log(history_vector_.size()/total);
+    for (auto& log_posterior_bias : log_posterior_bias_vector_)
+    {
+        log_posterior_bias += correction;
+    }
+
+    //get log probability
+    for (int i = 0; i < history_vector_.size(); i++)
+    {
+        std::pair<double,double> grad_log_prob_pair = compute_log_posterior(
+                history_vector_[i]);
+        //we account the for the bias sampling in the posterior
+        log_posterior_vector_.push_back(
+                grad_log_prob_pair.first - log_posterior_bias_vector_[i]);
         grad_log_posterior_vector_.push_back(grad_log_prob_pair.second);
     }
 }

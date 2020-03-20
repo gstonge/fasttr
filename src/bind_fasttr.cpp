@@ -19,7 +19,7 @@ void declare_history_sampler(py::module &m, string typestr)
 
         .def(py::init<const unordered_map<Node,unordered_set<Node>>&,
                 const vector<double>&, const vector<double>&,
-                unsigned int>(), R"pbdoc(
+                unsigned int, double, double>(), R"pbdoc(
             Default constructor of the class.
 
             Args:
@@ -28,8 +28,14 @@ void declare_history_sampler(py::module &m, string typestr)
                grad_kernel_vector: Vector of gradient kernel value according
                                    to some parameter.
                seed: Seed for the RNG.
+               source_bias: Float for the exponent to bias toward more probable
+                            source nodes. Default is 1, unbiased.
+               sample_bias: Float for the exponent to bias toward more probable
+                            nodes through the sampling. Default is 1, unbiased.
+
             )pbdoc", py::arg("adjacency_map"), py::arg("kernel_vector"),
-                py::arg("grad_kernel_vector"), py::arg("seed") = 42)
+                py::arg("grad_kernel_vector"), py::arg("seed") = 42,
+                py::arg("source_bias") = 1., py::arg("sample_bias") = 1.)
 
         //accessors
 
