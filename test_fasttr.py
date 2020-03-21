@@ -171,8 +171,8 @@ class TestBiasSampling:
         G = nx.Graph(edge_list)
 
         #without bias
-        history_sampler = HistorySampler(G, seed=np.random.randint(1,1000),source_bias=1.)
-        history_sampler.sample(1000)
+        history_sampler = HistorySampler(G,seed=42,source_bias=1.)
+        history_sampler.sample(10000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_unbiased = []
         for gamma in gamma_list:
@@ -183,7 +183,7 @@ class TestBiasSampling:
 
         #with bias
         history_sampler = HistorySampler(G, seed=42,source_bias=2.)
-        history_sampler.sample(1000)
+        history_sampler.sample(10000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
         for gamma in gamma_list:
@@ -232,8 +232,8 @@ class TestBiasSampling:
         G = nx.Graph(edge_list)
 
         #without bias
-        history_sampler = HistorySampler(G, seed=np.random.randint(1,1000),sample_bias=1.)
-        history_sampler.sample(1000)
+        history_sampler = HistorySampler(G,seed=42,sample_bias=1.)
+        history_sampler.sample(10000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_unbiased = []
         for gamma in gamma_list:
@@ -243,8 +243,8 @@ class TestBiasSampling:
         posterior_unbiased = np.array(posterior_unbiased)
 
         #with bias
-        history_sampler = HistorySampler(G, seed=42,sample_bias=2.)
-        history_sampler.sample(1000)
+        history_sampler = HistorySampler(G,seed=42,sample_bias=2.)
+        history_sampler.sample(10000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
         for gamma in gamma_list:
@@ -295,7 +295,7 @@ class TestBiasSampling:
 
         #without bias
         history_sampler = HistorySampler(G, seed=42)
-        history_sampler.sample(1000)
+        history_sampler.sample(10000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_unbiased = []
         for gamma in gamma_list:
@@ -306,7 +306,7 @@ class TestBiasSampling:
 
         #with bias
         history_sampler = HistorySampler(G,seed=42,source_bias=1.2,sample_bias=1.2)
-        history_sampler.sample(1000)
+        history_sampler.sample(10000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
         for gamma in gamma_list:

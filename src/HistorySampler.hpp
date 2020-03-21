@@ -327,6 +327,7 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
         History& history = history_vector_[i];
         std::pair<Node,double> node_prob = source_.sample();
         Node source = node_prob.first;
+        //compute bias relative to uniform
         log_posterior_bias += log(node_prob.second/source_.total_weight());
         history.push_back(source);
         root(source);
@@ -344,8 +345,6 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
         while (boundary_.size() > 0)
         {
             node_prob = boundary_.sample();
-            //std::cout << "Here 3, size " << boundary_.size()  << std::endl;
-            //std::cout << "Here 3, total_weight " << boundary_.total_weight()  << std::endl;
             Node node = node_prob.first;
             //compute bias relative to uniform
             log_posterior_bias += log(node_prob.second/boundary_.total_weight());
