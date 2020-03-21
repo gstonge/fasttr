@@ -447,29 +447,6 @@ void HistorySampler<Node>::update_log_posterior()
     grad_log_posterior_vector_.clear();
     grad_log_posterior_vector_.reserve(history_vector_.size());
 
-    ////Transform log posterior bias vector such that
-    ////the posterior bias sums to nb_sample.
-    ////Hence without bias, each log_posterior_bias is null
-    //double max_log_posterior_bias = log_posterior_bias_vector_[0];
-    //for (const auto& log_posterior_bias : log_posterior_bias_vector_)
-    //{
-        //if (log_posterior_bias >  max_log_posterior_bias)
-        //{
-            //max_log_posterior_bias = log_posterior_bias;
-        //}
-    //}
-    //double total = 0.;
-    //for (auto& log_posterior_bias : log_posterior_bias_vector_)
-    //{
-        //log_posterior_bias -= max_log_posterior_bias;
-        //total += exp(log_posterior_bias);
-    //}
-    //double correction = log(history_vector_.size()/total);
-    //for (auto& log_posterior_bias : log_posterior_bias_vector_)
-    //{
-        //log_posterior_bias += correction;
-    //}
-
     //get log probability
     for (int i = 0; i < history_vector_.size(); i++)
     {
