@@ -1,6 +1,7 @@
 #ifndef HISTORYSAMPLER_HPP_
 #define HISTORYSAMPLER_HPP_
 
+#include <iostream>
 #include "SamplableSet/SamplableSetCR.hpp"
 #include <unordered_map>
 #include <unordered_set>
@@ -108,8 +109,8 @@ HistorySampler<Node>::HistorySampler(
     kernel_vector_(kernel_vector),
     grad_kernel_vector_(grad_kernel_vector),
     n_(adjacency_map_.size()),
-    boundary_(std::min(1.,pow(n_,sample_bias)),
-            std::max(1.,pow(n_,sample_bias)),seed),
+    boundary_(std::min(1.,pow(double(n_),sample_bias)),
+            std::max(1.,pow(double(n_),sample_bias)),seed),
     source_(1,1,seed+1),
     root_(),
     rooted_(false),
@@ -136,10 +137,14 @@ HistorySampler<Node>::HistorySampler(
     compute_source_probability(source);
     unroot();
 
-    //normalize and determine min max unbiased probabilities
+    //compute log number of histories
+    compute_number_of_histories();
+
+    //normalize and determine min max biased probabilities
     double weight_sum = 0.;
     for (auto& element : probability_map_)
     {
+        element.second = pow(element.second,source_bias_);//apply bias
         weight_sum += element.second;
     }
     double min_probability = 1.;
@@ -158,52 +163,13 @@ HistorySampler<Node>::HistorySampler(
             max_probability = p;
         }
     }
+
     //create samplable set for source
-    source_ = sset::SamplableSetCR<Node>(min_probability,
-            max_probability,
-            seed+1);
+    source_ = sset::SamplableSetCR<Node>(
+            min_probability,max_probability,seed+1);
     for (const auto& element : probability_map_)
     {
         source_.insert(element.first,element.second);
-    }
-
-    //compute log number of histories
-    compute_number_of_histories();
-
-    //get a new source distribution if bias != 1. for the source
-    if (source_bias_ != 1.)
-    {
-        //normalize and determine min max biased probabilities
-        weight_sum = 0.;
-        for (auto& element : probability_map_)
-        {
-            element.second = pow(element.second,source_bias_);//apply bias
-            weight_sum += element.second;
-        }
-        double min_probability = 1.;
-        double max_probability = 0.;
-        double p;
-        for (auto& element : probability_map_)
-        {
-            element.second /= weight_sum;
-            p = element.second;
-            if (p < min_probability)
-            {
-                min_probability = p;
-            }
-            if (p > max_probability)
-            {
-                max_probability = p;
-            }
-        }
-        //create samplable set for source
-        source_ = sset::SamplableSetCR<Node>(min_probability,
-                max_probability,
-                seed+1);
-        for (const auto& element : probability_map_)
-        {
-            source_.insert(element.first,element.second);
-        }
     }
 }
 
@@ -300,10 +266,16 @@ template <typename Node>
 void HistorySampler<Node>::compute_number_of_histories()
 {
     log_number_of_histories_ = 0.;
-    sset::SamplableSetCR<Node> boundary(1.,n_,0); //seed not important
-    std::pair<Node,double> node_prob = source_.sample();
-    Node source = node_prob.first;
-    log_number_of_histories_ += log(source_.total_weight()/node_prob.second);
+    auto it = adjacency_map_.begin();
+    const Node& source = (*it).first;
+    std::vector<Node> boundary;
+
+    double weight_sum = 0.;
+    for (auto& element : probability_map_)
+    {
+        weight_sum += element.second;
+    }
+    log_number_of_histories_ += log(weight_sum/probability_map_[source]);
     root(source);
     if (descendant_map_.count(source) == 0)
     {
@@ -312,21 +284,24 @@ void HistorySampler<Node>::compute_number_of_histories()
     std::unordered_map<Node,
         std::size_t>& descendant_ = descendant_map_.at(source);
     //add neighbors of root to boundary
+    weight_sum = 0.;
     for (const auto& neighbor : rooted_adjacency_map_[source])
     {
-        boundary.insert(neighbor, descendant_[neighbor]);
+        boundary.push_back(neighbor);
+        weight_sum += descendant_[neighbor];
     }
     while (boundary.size() > 0)
     {
-        std::pair<Node,double> node_prob = boundary.sample();
-        Node node = node_prob.first;
+        Node node = boundary.back();
         //compute bias relative to uniform
-        log_number_of_histories_ += log(boundary.total_weight()/node_prob.second);
-        boundary.erase(node);
+        log_number_of_histories_ += log(weight_sum/descendant_[node]);
+        weight_sum -= descendant_[node];
+        boundary.pop_back();
         //add neighbors of node to boundary
         for (const auto& neighbor : rooted_adjacency_map_[node])
         {
-            boundary.insert(neighbor, descendant_[neighbor]);
+            boundary.push_back(neighbor);
+            weight_sum += descendant_[neighbor];
         }
     }
     unroot();
@@ -352,6 +327,7 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
         History& history = history_vector_[i];
         std::pair<Node,double> node_prob = source_.sample();
         Node source = node_prob.first;
+        //compute bias relative to uniform
         log_posterior_bias += log(node_prob.second/source_.total_weight());
         history.push_back(source);
         root(source);
@@ -364,11 +340,11 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
         //add neighbors of root to boundary
         for (const auto& neighbor : rooted_adjacency_map_[source])
         {
-            boundary_.insert(neighbor, pow(descendant_[neighbor],sample_bias_));
+            boundary_.insert(neighbor, pow(double(descendant_[neighbor]),sample_bias_));
         }
         while (boundary_.size() > 0)
         {
-            std::pair<Node,double> node_prob = boundary_.sample();
+            node_prob = boundary_.sample();
             Node node = node_prob.first;
             //compute bias relative to uniform
             log_posterior_bias += log(node_prob.second/boundary_.total_weight());
@@ -377,9 +353,10 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
             //add neighbors of node to boundary
             for (const auto& neighbor : rooted_adjacency_map_[node])
             {
-                boundary_.insert(neighbor, pow(descendant_[neighbor],sample_bias_));
+                boundary_.insert(neighbor, pow(double(descendant_[neighbor]),sample_bias_));
             }
         }
+        boundary_.clear();
         unroot();
         log_posterior_bias_vector_.push_back(log_posterior_bias);
     }
