@@ -13,7 +13,8 @@ class HistorySampler:
 
     This class is a wrapper around a C++ implementation.
     """
-    def __init__(self, G, kernel=None, grad_kernel=None, seed=None):
+    def __init__(self, G, kernel=None, grad_kernel=None, seed=None,
+                source_bias=1., sample_bias=1.):
         """
         Creates a new HistorySampler instance.
 
@@ -25,7 +26,15 @@ class HistorySampler:
                                               of kernel, according to some
                                               parameter.
             seed (int, optional): Seed used to sample elements from the set.
+            source_bias (float, optional): Float for the exponent to bias toward
+                                           more probable source nodes. Default is
+                                           1, unbiased.
+            sample_bias (float, optional): Float for the exponent to bias toward
+                                           more probable nodes through the
+                                           sampling. Default is 1, unbiased.
         """
+        self.source_bias = source_bias
+        self.sample_bias = sample_bias
         self.seed = seed or 42
         if kernel is not None:
             self.kernel = kernel
@@ -55,7 +64,8 @@ class HistorySampler:
         # Instanciate the history sampler
         adjacency_map = {n:set(G.neighbors(n)) for n in G}
         self.history_sampler_ = template_classes[self.cpp_type](
-            adjacency_map,kernel_vector,grad_kernel_vector,self.seed)
+            adjacency_map,kernel_vector,grad_kernel_vector,self.seed,
+            self.source_bias,self.source_bias)
         self._wrap_methods()
 
 
