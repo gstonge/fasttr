@@ -116,52 +116,6 @@ class TestPosterior:
         assert (np.abs(log_posterior_python - log_posterior_cpp.T)
                 <= 10**(-12)).all()
 
-    def test_posterior_non_tree_1(self):
-        edge_list = [(0,1),(0,2),(1,2),(1,3)]
-        G = nx.Graph(edge_list)
-        history_sampler = HistorySampler(G, seed=42)
-        history_sampler.sample(1)
-        gamma_list = np.linspace(0.7,1.3,10)
-        log_posterior_cpp = []
-        for gamma in gamma_list:
-            history_sampler.set_kernel(lambda k: k**(gamma))
-            log_posterior_cpp.append(
-                history_sampler.get_log_posterior())
-        log_posterior_cpp = np.array(log_posterior_cpp)
-
-        #posterior in python
-        H = history_sampler.get_histories()
-        log_posterior_python = np.array([
-            np.array([ln_history_probability(G, h, np.arange(10)**x)
-                      for x in gamma_list]) for h in H])
-
-        assert (np.abs(log_posterior_python - log_posterior_cpp.T)
-                <= 10**(-12)).all()
-
-    def test_posterior_non_tree_2(self):
-        #posterior in c++
-        num_nodes = 100
-        G = nx.barabasi_albert_graph(num_nodes,2)
-        history_sampler = HistorySampler(G, seed=42)
-        history_sampler.sample(10)
-        gamma_list = np.linspace(0.7,1.3,10)
-        log_posterior_cpp = []
-        for gamma in gamma_list:
-            history_sampler.set_kernel(lambda k: k**(gamma))
-            log_posterior_cpp.append(
-                history_sampler.get_log_posterior())
-        log_posterior_cpp = np.array(log_posterior_cpp)
-
-        #posterior in python
-        H = history_sampler.get_histories()
-        log_posterior_python = np.array([
-            np.array([ln_history_probability(G, h, np.arange(100)**x)
-                      for x in gamma_list]) for h in H])
-
-        print(log_posterior_python)
-        print(log_posterior_cpp.T)
-        assert (np.abs(log_posterior_python - log_posterior_cpp.T)
-                <= 10**(-10)).all()
 
 class TestKernel:
     def test_grad_kernel(self):
@@ -208,4 +162,158 @@ class TestGroundTruth:
         kernel = lambda k: k**1.
         H.set_kernel(kernel)
         assert H.get_ground_truth_log_posterior() == H.get_log_posterior()[0]
+
+
+class TestBiasSampling:
+    def test_posterior_source_bias_1(self):
+        #barbell graph
+        edge_list = [(0,1),(1,2),(1,3),(3,4),(3,5)]
+        G = nx.Graph(edge_list)
+
+        #without bias
+        history_sampler = HistorySampler(G, seed=42,source_bias=1.)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_unbiased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_unbiased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_unbiased = np.array(posterior_unbiased)
+
+        #with bias
+        history_sampler = HistorySampler(G, seed=42,source_bias=2.5)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_biased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_biased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_biased = np.array(posterior_biased)
+
+        assert (np.abs(posterior_biased - posterior_unbiased)
+                <= 10**(-4)).all()
+
+
+    def test_posterior_source_bias_2(self):
+        #ba graph
+        num_nodes = 20
+        G = nx.barabasi_albert_graph(num_nodes,1)
+
+        #without bias
+        history_sampler = HistorySampler(G, seed=42,source_bias=1.)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_unbiased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_unbiased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_unbiased = np.array(posterior_unbiased)
+
+        #with bias
+        history_sampler = HistorySampler(G, seed=42,source_bias=2.5)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_biased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_biased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_biased = np.array(posterior_biased)
+
+        assert (np.abs(posterior_biased - posterior_unbiased)
+                <= 10**(-4)).all()
+
+    def test_posterior_sample_bias_1(self):
+        #barbell graph
+        edge_list = [(0,1),(1,2),(1,3),(3,4),(3,5)]
+        G = nx.Graph(edge_list)
+
+        #without bias
+        history_sampler = HistorySampler(G, seed=42,sample_bias=1.)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_unbiased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_unbiased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_unbiased = np.array(posterior_unbiased)
+
+        #with bias
+        history_sampler = HistorySampler(G, seed=42,sample_bias=2.5)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_biased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_biased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_biased = np.array(posterior_biased)
+
+        assert (np.abs(posterior_biased - posterior_unbiased)
+                <= 10**(-4)).all()
+
+
+    def test_posterior_sample_bias_2(self):
+        #ba graph
+        num_nodes = 20
+        G = nx.barabasi_albert_graph(num_nodes,1)
+
+        #without bias
+        history_sampler = HistorySampler(G, seed=42,sample_bias=1.)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_unbiased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_unbiased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_unbiased = np.array(posterior_unbiased)
+
+        #with bias
+        history_sampler = HistorySampler(G, seed=42,sample_bias=2.5)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_biased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_biased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_biased = np.array(posterior_biased)
+
+        assert (np.abs(posterior_biased - posterior_unbiased)
+                <= 10**(-4)).all()
+
+    def test_posterior_sample_and_source_bias(self):
+        #ba graph
+        num_nodes = 20
+        G = nx.barabasi_albert_graph(num_nodes,1)
+
+        #without bias
+        history_sampler = HistorySampler(G, seed=42)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_unbiased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_unbiased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_unbiased = np.array(posterior_unbiased)
+
+        #with bias
+        history_sampler = HistorySampler(G, seed=42,source_bias=2.,sample_bias=2.5)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_biased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_biased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_biased = np.array(posterior_biased)
+
+        assert (np.abs(posterior_biased - posterior_unbiased)
+                <= 10**(-4)).all()
 

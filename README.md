@@ -136,3 +136,19 @@ a = 1
 history_sampler.set_kernel(kernel=lambda k: k**0.5 + a,
                            grad_kernel=lambda k: 1)
 ```
+
+### Non-uniform sampling
+
+For certain tasks, it might not be desired to sample uniformly among possible
+histories. We allow non-uniform sampling by biasing the probability for the
+source and/or the probability to select a node at each step of the
+reconstruction. This is tuned by a `source_bias` and a `sample_bias` exponent.
+Having exponents > 1 concentrate the probability on most probable nodes, with
+a greedy method at infinity ; the opposite is true for exponents < 1, with a
+snowball sampling method at negative infinity.
+
+**Note :** the posterior calculation is adapted to compensate the bias.
+
+```python
+history_sampler = HistorySampler(G, source_bias=1., sample_bias=1.) #unbiased
+```
