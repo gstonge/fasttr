@@ -148,6 +148,8 @@ a greedy method at infinity ; the opposite is true for exponents < 1, with a
 snowball sampling method at negative infinity.
 
 **Note :** the posterior calculation is adapted to compensate the bias.
+However, unless a large sample size is used, estimates for expected values
+will be off.
 
 ```python
 history_sampler = HistorySampler(G, source_bias=1., sample_bias=1.) #unbiased
