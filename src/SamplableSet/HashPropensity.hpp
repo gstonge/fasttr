@@ -36,16 +36,16 @@ class HashPropensity
 {
 public:
     //Constructor
-    HashPropensity(double propensity_min, double propensity_max);
+    HashPropensity(long double propensity_min, long double propensity_max);
     HashPropensity(const HashPropensity& hash_object);
 
     //Call operator definition
-    std::size_t operator()(double propensity) const;
+    std::size_t operator()(long double propensity) const;
 
 private:
     //Members
-    double propensity_min_;
-    double propensity_max_;
+    long double propensity_min_;
+    long double propensity_max_;
     bool power_of_two_;
 };
 

@@ -18,8 +18,8 @@ void declare_history_sampler(py::module &m, string typestr)
     py::class_<HistorySampler<Node> >(m, pyclass_name.c_str())
 
         .def(py::init<const unordered_map<Node,unordered_set<Node>>&,
-                const vector<double>&, const vector<double>&,
-                unsigned int, double, double>(), R"pbdoc(
+                const vector<long double>&, const vector<long double>&,
+                unsigned int, long double, long double>(), R"pbdoc(
             Default constructor of the class.
 
             Args:
@@ -71,7 +71,7 @@ void declare_history_sampler(py::module &m, string typestr)
         .def("get_ground_truth_log_posterior",
                 &HistorySampler<Node>::get_ground_truth_log_posterior,
                 R"pbdoc(
-            Returns a double for the log posterior of the ground truth.
+            Returns a long double for the log posterior of the ground truth.
             )pbdoc")
 
         .def("get_marginal_mean", &HistorySampler<Node>::get_marginal_mean,

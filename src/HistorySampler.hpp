@@ -16,7 +16,7 @@
 namespace fasttr
 {//start of namespace fasttr
 
-const double INF = std::numeric_limits<double>::infinity();
+const long double INF = std::numeric_limits<long double>::infinity();
 
 /*
  * Class to perform fast sampling of history of growing trees
@@ -32,33 +32,33 @@ public:
     //Default constructor
     HistorySampler(
             const std::unordered_map<Node,std::unordered_set<Node>>& adjacency_map,
-            const std::vector<double>& kernel_vector,
-            const std::vector<double>& grad_kernel_vector,
-            unsigned int seed = 42, double source_bias = 1, double sample_bias = 1);
+            const std::vector<long double>& kernel_vector,
+            const std::vector<long double>& grad_kernel_vector,
+            unsigned int seed = 42, long double source_bias = 1, long double sample_bias = 1);
 
     //Accessors
     const AdjacencyMap& get_adjacency() const
         {return adjacency_map_;}
     const AdjacencyMap& get_rooted_adjacency() const
         {return rooted_adjacency_map_;}
-    const std::unordered_map<Node,double>& get_probability() const
+    const std::unordered_map<Node,long double>& get_probability() const
         {return probability_map_;}
     const std::vector<History>& get_histories() const
         {return history_vector_;}
-    const std::vector<double>& get_log_posterior() const
+    const std::vector<long double>& get_log_posterior() const
         {return log_posterior_vector_;}
-    const std::vector<double>& get_grad_log_posterior() const
+    const std::vector<long double>& get_grad_log_posterior() const
         {return grad_log_posterior_vector_;}
-    double get_ground_truth_log_posterior();
-    std::unordered_map<Node,double> get_marginal_mean();
+    long double get_ground_truth_log_posterior();
+    std::unordered_map<Node,long double> get_marginal_mean();
 
     //Mutators
     void root(const Node& source);
     void unroot();
 
     void sample(std::size_t nb_sample);
-    void set_kernel_vector(const std::vector<double>& kernel_vector,
-            const std::vector<double>& grad_kernel_vector)
+    void set_kernel_vector(const std::vector<long double>& kernel_vector,
+            const std::vector<long double>& grad_kernel_vector)
         {kernel_vector_ = kernel_vector;
          grad_kernel_vector_ = grad_kernel_vector;
          update_log_posterior();}
@@ -69,8 +69,8 @@ public:
 private:
     AdjacencyMap adjacency_map_;
     AdjacencyMap rooted_adjacency_map_;
-    std::vector<double> kernel_vector_;
-    std::vector<double> grad_kernel_vector_;
+    std::vector<long double> kernel_vector_;
+    std::vector<long double> grad_kernel_vector_;
     std::size_t n_;
     mutable sset::SamplableSetCR<Node> source_;
     mutable sset::SamplableSetCR<Node> boundary_;
@@ -78,22 +78,22 @@ private:
     bool rooted_;
     std::unordered_map<Node,
         std::unordered_map<Node,std::size_t>> descendant_map_;
-    std::unordered_map<Node,double> probability_map_; //for source
+    std::unordered_map<Node,long double> probability_map_; //for source
     std::vector<History> history_vector_;
-    std::vector<double> log_posterior_vector_; //for history
-    std::vector<double> grad_log_posterior_vector_; //for history
-    std::vector<double> log_posterior_bias_vector_; //for history
+    std::vector<long double> log_posterior_vector_; //for history
+    std::vector<long double> grad_log_posterior_vector_; //for history
+    std::vector<long double> log_posterior_bias_vector_; //for history
     History ground_truth_;
-    double source_bias_;
-    double sample_bias_;
-    double log_number_of_histories_;
+    long double source_bias_;
+    long double sample_bias_;
+    long double log_number_of_histories_;
 
     //methods
     std::size_t compute_descendant(const Node& node);
     void compute_source_probability(const Node& node);
     void compute_number_of_histories();
 
-    std::pair<double,double> compute_log_posterior(const History& history);
+    std::pair<long double,long double> compute_log_posterior(const History& history);
     void update_log_posterior();
 };
 
@@ -101,16 +101,16 @@ private:
 template <typename Node>
 HistorySampler<Node>::HistorySampler(
         const std::unordered_map<Node,std::unordered_set<Node>>& adjacency_map,
-        const std::vector<double>& kernel_vector,
-        const std::vector<double>& grad_kernel_vector,
-        unsigned int seed, double source_bias, double sample_bias) :
+        const std::vector<long double>& kernel_vector,
+        const std::vector<long double>& grad_kernel_vector,
+        unsigned int seed, long double source_bias, long double sample_bias) :
     adjacency_map_(adjacency_map),
     rooted_adjacency_map_(),
     kernel_vector_(kernel_vector),
     grad_kernel_vector_(grad_kernel_vector),
     n_(adjacency_map_.size()),
-    boundary_(std::min(1.,pow(double(n_),sample_bias)),
-            std::max(1.,pow(double(n_),sample_bias)),seed),
+    boundary_(std::min(static_cast<long double>(1.),pow(static_cast<long double>(n_),sample_bias)),
+            std::max(static_cast<long double>(1.),pow(static_cast<long double>(n_),sample_bias)),seed),
     source_(1,1,seed+1),
     root_(),
     rooted_(false),
@@ -141,15 +141,15 @@ HistorySampler<Node>::HistorySampler(
     compute_number_of_histories();
 
     //normalize and determine min max biased probabilities
-    double weight_sum = 0.;
+    long double weight_sum = 0.;
     for (auto& element : probability_map_)
     {
         element.second = pow(element.second,source_bias_);//apply bias
         weight_sum += element.second;
     }
-    double min_probability = 1.;
-    double max_probability = 0.;
-    double p;
+    long double min_probability = 1.;
+    long double max_probability = 0.;
+    long double p;
     for (auto& element : probability_map_)
     {
         element.second /= weight_sum;
@@ -270,7 +270,7 @@ void HistorySampler<Node>::compute_number_of_histories()
     const Node& source = (*it).first;
     std::vector<Node> boundary;
 
-    double weight_sum = 0.;
+    long double weight_sum = 0.;
     for (auto& element : probability_map_)
     {
         weight_sum += element.second;
@@ -315,17 +315,23 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
     {
         throw std::runtime_error("The sample size must be superior to 0");
     }
+    long double min_weight = std::min(static_cast<long double>(1.),pow(static_cast<long double>(n_),sample_bias_));
+    long double max_weight = std::max(static_cast<long double>(1.),pow(static_cast<long double>(n_),sample_bias_));
+    if (max_weight/min_weight > 1e16)
+    {
+        throw std::runtime_error("min and max weigth span too many scales (>1e16)");
+    }
 
     history_vector_.clear();
     log_posterior_bias_vector_.clear();
 
-    double log_posterior_bias; //log posterior prob for the history due to bias
+    long double log_posterior_bias; //log posterior prob for the history due to bias
     for (std::size_t i = 0; i < nb_sample; i++)
     {
         log_posterior_bias = log_number_of_histories_;
         history_vector_.push_back(History());
         History& history = history_vector_[i];
-        std::pair<Node,double> node_prob = source_.sample();
+        std::pair<Node,long double> node_prob = source_.sample();
         Node source = node_prob.first;
         //compute bias relative to uniform
         log_posterior_bias += log(node_prob.second/source_.total_weight());
@@ -340,7 +346,7 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
         //add neighbors of root to boundary
         for (const auto& neighbor : rooted_adjacency_map_[source])
         {
-            boundary_.insert(neighbor, pow(double(descendant_[neighbor]),sample_bias_));
+            boundary_.insert(neighbor, pow(static_cast<long double>(descendant_[neighbor]),sample_bias_));
         }
         while (boundary_.size() > 0)
         {
@@ -353,7 +359,7 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
             //add neighbors of node to boundary
             for (const auto& neighbor : rooted_adjacency_map_[node])
             {
-                boundary_.insert(neighbor, pow(double(descendant_[neighbor]),sample_bias_));
+                boundary_.insert(neighbor, pow(static_cast<long double>(descendant_[neighbor]),sample_bias_));
             }
         }
         boundary_.clear();
@@ -367,16 +373,16 @@ void HistorySampler<Node>::sample(std::size_t nb_sample)
 //get log probability of an history, and the gradient of that according to
 //some parameter
 template <typename Node>
-std::pair<double,double> HistorySampler<Node>::compute_log_posterior(
+std::pair<long double,long double> HistorySampler<Node>::compute_log_posterior(
         const History& history)
 {
     std::unordered_map<Node,std::size_t> degree_map;
     degree_map[history[0]] = 1;
     degree_map[history[1]] = 1;
-    double Z = 2*kernel_vector_[1];
-    double dZ = 2*grad_kernel_vector_[1];
-    double log_prob = 0.;
-    double grad_log_prob = 0.;
+    long double Z = 2*kernel_vector_[1];
+    long double dZ = 2*grad_kernel_vector_[1];
+    long double log_prob = 0.;
+    long double grad_log_prob = 0.;
     for (std::size_t t = 2 ; t < history.size(); t++)
     {
         const Node& node = history[t];
@@ -427,7 +433,7 @@ void HistorySampler<Node>::update_log_posterior()
     //get log probability
     for (int i = 0; i < history_vector_.size(); i++)
     {
-        std::pair<double,double> grad_log_prob_pair = compute_log_posterior(
+        std::pair<long double,long double> grad_log_prob_pair = compute_log_posterior(
                 history_vector_[i]);
         //we account the for the bias sampling in the posterior
         log_posterior_vector_.push_back(
@@ -439,14 +445,14 @@ void HistorySampler<Node>::update_log_posterior()
 
 //return a map of the marginal mean arrival time for each node
 template <typename Node>
-std::unordered_map<Node,double> HistorySampler<Node>::get_marginal_mean()
+std::unordered_map<Node,long double> HistorySampler<Node>::get_marginal_mean()
 {
-    std::unordered_map<Node,double> marginal_mean;
-    double max_log_prob = *std::max_element(log_posterior_vector_.begin(),
+    std::unordered_map<Node,long double> marginal_mean;
+    long double max_log_prob = *std::max_element(log_posterior_vector_.begin(),
             log_posterior_vector_.end());
-    std::vector<double> probability_vector(log_posterior_vector_);
+    std::vector<long double> probability_vector(log_posterior_vector_);
     //get weight
-    double total_prob = 0;
+    long double total_prob = 0;
     for (auto& prob : probability_vector)
     {
         prob = exp(prob - max_log_prob);
@@ -478,7 +484,7 @@ std::unordered_map<Node,double> HistorySampler<Node>::get_marginal_mean()
 }
 
 template <typename Node>
-double HistorySampler<Node>::get_ground_truth_log_posterior()
+long double HistorySampler<Node>::get_ground_truth_log_posterior()
 {
     if (ground_truth_.size() > 0)
     {
