@@ -50,10 +50,10 @@ class SamplableSetCR
 {
 public:
     //Definition
-    typedef std::vector<std::pair<T,double> > PropensityGroup;
+    typedef std::vector<std::pair<T,long double> > PropensityGroup;
 
     //Default constructor
-    SamplableSetCR(double min_weight, double max_weight,
+    SamplableSetCR(long double min_weight, long double max_weight,
             unsigned int seed = 42);
     //Copy constructor
     SamplableSetCR(const SamplableSetCR<T>& s);
@@ -73,16 +73,16 @@ public:
     std::size_t size() const {return position_map_.size();}
     std::size_t inline count(const T& element) const
         {return position_map_.count(element);}
-    std::pair<T,double> sample() const;
+    std::pair<T,long double> sample() const;
     template <typename ExtRNG>
-    std::pair<T,double> sample_ext_RNG(ExtRNG& gen) const;
-    double total_weight() const {return sampling_tree_.get_value();}
-    double get_weight(const T& element) const;
-    std::pair<T,double> get_at_iterator() const;
+    std::pair<T,long double> sample_ext_RNG(ExtRNG& gen) const;
+    long double total_weight() const {return sampling_tree_.get_value();}
+    long double get_weight(const T& element) const;
+    std::pair<T,long double> get_at_iterator() const;
 
     //Mutators
-    void insert(const T& element, double weight = 0);
-    void set_weight(const T& element, double weight);
+    void insert(const T& element, long double weight = 0);
+    void set_weight(const T& element, long double weight);
     void erase(const T& element);
     void next();
     void init_iterator();
@@ -92,10 +92,10 @@ public:
 private:
     //unvarying
     mutable RNGType gen_;
-    mutable std::uniform_real_distribution<double> random_01_;
+    mutable std::uniform_real_distribution<long double> random_01_;
     HashPropensity hash_;
     unsigned int number_of_group_;
-    std::vector<double> max_propensity_vector_;
+    std::vector<long double> max_propensity_vector_;
     //varying
     std::unordered_map<T,SSetPosition> position_map_;
     mutable BinaryTree sampling_tree_;
@@ -106,7 +106,7 @@ private:
 
 //Default constructor for the class SamplableSetCR
 template <typename T>
-SamplableSetCR<T>::SamplableSetCR(double min_weight, double max_weight,
+SamplableSetCR<T>::SamplableSetCR(long double min_weight, long double max_weight,
         unsigned int seed) :
     gen_(seed),
     random_01_(0.,1.),
@@ -165,7 +165,7 @@ SamplableSetCR<T>::SamplableSetCR(const SamplableSetCR<T>& s,
 
 //sample an element according to its weight
 template <typename T>
-std::pair<T,double> SamplableSetCR<T>::sample() const
+std::pair<T,long double> SamplableSetCR<T>::sample() const
 {
     if (sampling_tree_.get_value() > 0)
     {
@@ -196,7 +196,7 @@ std::pair<T,double> SamplableSetCR<T>::sample() const
 //sample an element according to its weight using an external RNG
 template <typename T>
 template <typename ExtRNG>
-std::pair<T,double> SamplableSetCR<T>::sample_ext_RNG(ExtRNG& gen) const
+std::pair<T,long double> SamplableSetCR<T>::sample_ext_RNG(ExtRNG& gen) const
 {
     if (sampling_tree_.get_value() > 0)
     {
@@ -227,7 +227,7 @@ std::pair<T,double> SamplableSetCR<T>::sample_ext_RNG(ExtRNG& gen) const
 
 //get the weight of an element if it exists
 template <typename T>
-double SamplableSetCR<T>::get_weight(const T& element) const
+long double SamplableSetCR<T>::get_weight(const T& element) const
 {
     if(count(element))
     {
@@ -243,7 +243,7 @@ double SamplableSetCR<T>::get_weight(const T& element) const
 //insert an element in the set with its associated weight
 //if the element is already there, do nothing
 template <typename T>
-void SamplableSetCR<T>::insert(const T& element, double weight)
+void SamplableSetCR<T>::insert(const T& element, long double weight)
 {
     //insert element only if not present
     if (position_map_.find(element) == position_map_.end())
@@ -261,7 +261,7 @@ void SamplableSetCR<T>::insert(const T& element, double weight)
 //set a new weight for the element in the set
 //if the element does not exists, same as insert
 template <typename T>
-void SamplableSetCR<T>::set_weight(const T& element, double weight)
+void SamplableSetCR<T>::set_weight(const T& element, long double weight)
 {
     erase(element);
     insert(element, weight);
@@ -276,7 +276,7 @@ void SamplableSetCR<T>::erase(const T& element)
     {
         const SSetPosition& position = position_map_.at(element);
         //create alias for element and its weight pair
-        std::pair<T, double>& element_weight_pair =
+        std::pair<T, long double>& element_weight_pair =
             propensity_group_vector_[position.first][position.second];
         sampling_tree_.update_value(position.first, -element_weight_pair.second);
         //gives position to last element of propensity group and swap
@@ -325,7 +325,7 @@ void SamplableSetCR<T>::next()
 }
 
 template <typename T>
-std::pair<T,double> SamplableSetCR<T>::get_at_iterator() const
+std::pair<T,long double> SamplableSetCR<T>::get_at_iterator() const
 {
     if (iterator_ != (propensity_group_vector_.back()).end())
     {

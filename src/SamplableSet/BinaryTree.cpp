@@ -129,10 +129,10 @@ BinaryTree::~BinaryTree()
 }
 
 //Get the leaf index associated to the cumulative fraction r
-LeafIndex BinaryTree::get_leaf_index(double r)
+LeafIndex BinaryTree::get_leaf_index(long double r)
 {
-    double cumul = 0;
-    double total_value = get_value();
+    long double cumul = 0;
+    long double total_value = get_value();
     while (not is_leaf())
     {
         if (r <= (cumul + get_value_left())/total_value)
@@ -189,7 +189,7 @@ void BinaryTree::destroy_tree(BinaryTreeNode* node)
 }
 
 //update value for the leaf and parents
-void BinaryTree::update_value(LeafIndex leaf_index, double variation)
+void BinaryTree::update_value(LeafIndex leaf_index, long double variation)
 {
     current_node_ = leaves_vector_[leaf_index];
     (current_node_->value) += variation;
@@ -201,7 +201,7 @@ void BinaryTree::update_value(LeafIndex leaf_index, double variation)
 }
 
 //update value for current leaf
-void BinaryTree::update_value(double variation)
+void BinaryTree::update_value(long double variation)
 {
     if (is_leaf())
     {

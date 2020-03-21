@@ -40,7 +40,7 @@ struct BinaryTreeNode
 {
     BinaryTreeNode() : value(0.), parent(nullptr), child_left(nullptr),
     child_right(nullptr) {}
-    double value;
+    long double value;
     BinaryTreeNode* parent;
     BinaryTreeNode* child_left;
     BinaryTreeNode* child_right;
@@ -67,15 +67,15 @@ public:
     bool is_leaf()
         {return current_node_->child_left == nullptr and
             current_node_->child_right == nullptr ;}
-    double get_value() const
+    long double get_value() const
         {return current_node_->value;}
-    double get_value_left() const
+    long double get_value_left() const
         {return (current_node_->child_left)->value;}
-    double get_value_right() const
+    long double get_value_right() const
         {return (current_node_->child_right)->value;}
     LeafIndex get_leaf_index() const
         {return leaves_index_map_.at(current_node_);}
-    LeafIndex get_leaf_index(double r);
+    LeafIndex get_leaf_index(long double r);
 
     //Mutators
     void reset_current_node()
@@ -88,8 +88,8 @@ public:
         {current_node_ = current_node_->parent;}
     void move_at(BinaryTreeNode* node)
         {current_node_ = node;}
-    void update_value(LeafIndex leaf_index, double variation);
-    void update_value(double variation);
+    void update_value(LeafIndex leaf_index, long double variation);
+    void update_value(long double variation);
     void update_zero();
     void clear();
 

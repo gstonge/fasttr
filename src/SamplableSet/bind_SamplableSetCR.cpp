@@ -44,7 +44,7 @@ void declare_samplable_set(py::module &m, string typestr)
 
     py::class_<SamplableSetCR<T> >(m, pyclass_name.c_str())
 
-        .def(py::init<double, double, unsigned int>(), R"pbdoc(
+        .def(py::init<long double, long double, unsigned int>(), R"pbdoc(
             Default constructor of the class.
 
             Args:

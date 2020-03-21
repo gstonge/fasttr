@@ -33,7 +33,7 @@ namespace sset
 
 
 //Default constructor
-HashPropensity::HashPropensity(double propensity_min, double propensity_max) :
+HashPropensity::HashPropensity(long double propensity_min, long double propensity_max) :
     propensity_min_(propensity_min), propensity_max_(propensity_max),
     power_of_two_(false)
 {
@@ -58,7 +58,7 @@ HashPropensity::HashPropensity(const HashPropensity& hash_object) :
 }
 
 //Call operator
-size_t HashPropensity::operator()(double propensity) const
+size_t HashPropensity::operator()(long double propensity) const
 {
     size_t index = floor(log2(propensity/propensity_min_));
     if (power_of_two_ and propensity == propensity_max_)
