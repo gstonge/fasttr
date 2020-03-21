@@ -12,7 +12,7 @@ G = nx.barabasi_albert_graph(num_nodes,1)
 
 #sample and evaluate posterior
 print("Initializing object...")
-history_sampler = HistorySampler(G, seed=42, sample_bias=2.)
+history_sampler = HistorySampler(G, seed=42)
 print("Running MC sweeps...")
 history_sampler.sample(n)
 print("Finished sampling")
