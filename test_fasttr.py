@@ -171,7 +171,7 @@ class TestBiasSampling:
         G = nx.Graph(edge_list)
 
         #without bias
-        history_sampler = HistorySampler(G, seed=42,source_bias=1.)
+        history_sampler = HistorySampler(G, seed=np.random.randint(1,1000),source_bias=1.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_unbiased = []
@@ -182,7 +182,7 @@ class TestBiasSampling:
         posterior_unbiased = np.array(posterior_unbiased)
 
         #with bias
-        history_sampler = HistorySampler(G, seed=42,source_bias=2.5)
+        history_sampler = HistorySampler(G, seed=42,source_bias=2.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
@@ -213,7 +213,7 @@ class TestBiasSampling:
         posterior_unbiased = np.array(posterior_unbiased)
 
         #with bias
-        history_sampler = HistorySampler(G, seed=42,source_bias=2.5)
+        history_sampler = HistorySampler(G, seed=42,source_bias=2.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
@@ -232,7 +232,7 @@ class TestBiasSampling:
         G = nx.Graph(edge_list)
 
         #without bias
-        history_sampler = HistorySampler(G, seed=42,sample_bias=1.)
+        history_sampler = HistorySampler(G, seed=np.random.randint(1,1000),sample_bias=1.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_unbiased = []
@@ -243,7 +243,7 @@ class TestBiasSampling:
         posterior_unbiased = np.array(posterior_unbiased)
 
         #with bias
-        history_sampler = HistorySampler(G, seed=42,sample_bias=2.5)
+        history_sampler = HistorySampler(G, seed=42,sample_bias=2.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
@@ -274,7 +274,7 @@ class TestBiasSampling:
         posterior_unbiased = np.array(posterior_unbiased)
 
         #with bias
-        history_sampler = HistorySampler(G, seed=42,sample_bias=2.5)
+        history_sampler = HistorySampler(G, seed=42,sample_bias=2.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []
@@ -287,7 +287,39 @@ class TestBiasSampling:
         assert (np.abs(posterior_biased - posterior_unbiased)
                 <= 10**(-4)).all()
 
+
     def test_posterior_sample_and_source_bias(self):
+        #barbell graph
+        edge_list = [(0,1),(1,2),(1,3),(3,4),(3,5)]
+        G = nx.Graph(edge_list)
+
+        #without bias
+        history_sampler = HistorySampler(G, seed=42)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_unbiased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_unbiased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_unbiased = np.array(posterior_unbiased)
+
+        #with bias
+        history_sampler = HistorySampler(G,seed=42,source_bias=1.2,sample_bias=1.2)
+        history_sampler.sample(1000)
+        gamma_list = np.linspace(0.7,1.3,5)
+        posterior_biased = []
+        for gamma in gamma_list:
+            history_sampler.set_kernel(lambda k: k**(gamma))
+            posterior_biased.append(
+                np.mean(np.exp(history_sampler.get_log_posterior())))
+        posterior_biased = np.array(posterior_biased)
+
+        assert (np.abs(posterior_biased - posterior_unbiased)
+                <= 10**(-4)).all()
+
+
+    def test_posterior_sample_and_source_bias_2(self):
         #ba graph
         num_nodes = 20
         G = nx.barabasi_albert_graph(num_nodes,1)
@@ -304,7 +336,7 @@ class TestBiasSampling:
         posterior_unbiased = np.array(posterior_unbiased)
 
         #with bias
-        history_sampler = HistorySampler(G, seed=42,source_bias=2.,sample_bias=2.5)
+        history_sampler = HistorySampler(G, seed=42,source_bias=2.,sample_bias=2.)
         history_sampler.sample(1000)
         gamma_list = np.linspace(0.7,1.3,5)
         posterior_biased = []

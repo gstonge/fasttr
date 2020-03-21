@@ -114,7 +114,7 @@ SamplableSetCR<T>::SamplableSetCR(double min_weight, double max_weight,
     number_of_group_(hash_(max_weight)+1),
     max_propensity_vector_(number_of_group_, 2*min_weight),
     position_map_(),
-    sampling_tree_(number_of_group_), 
+    sampling_tree_(number_of_group_),
     propensity_group_vector_(number_of_group_),
     iterator_(NULL),
     iterator_group_index_(0)

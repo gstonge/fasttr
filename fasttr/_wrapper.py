@@ -65,7 +65,7 @@ class HistorySampler:
         adjacency_map = {n:set(G.neighbors(n)) for n in G}
         self.history_sampler_ = template_classes[self.cpp_type](
             adjacency_map,kernel_vector,grad_kernel_vector,self.seed,
-            self.source_bias,self.source_bias)
+            self.source_bias,self.sample_bias)
         self._wrap_methods()
 
 
