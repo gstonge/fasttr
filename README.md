@@ -16,9 +16,11 @@ See the official python code on which this package is built :
 
 If you use this code, please consider citing:
 
-"[*Recovering the past states of growing trees*](https://arxiv.org/abs/1910.04788)"<br/>
+"[*Inference, Model Selection, and the Combinatorics of Growing Trees*](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.126.038301)"<br/>
 [G. T. Cantwell](https://www.george-cantwell.com), [G. St-Onge](https://gstonge.github.io) and [J.-G. Young](http://jgyoung.ca)<br/>
-arxiv:1910.04788 (2019) <br/>
+Phys. Rev. Lett. **126**, 038301 (2019) <br/>
+
+A preprint version is available [here](https://arxiv.org/abs/1910.04788).
 
 ## Requirements and dependencies
 
