@@ -116,7 +116,7 @@ SamplableSetCR<T>::SamplableSetCR(long double min_weight, long double max_weight
     position_map_(),
     sampling_tree_(number_of_group_),
     propensity_group_vector_(number_of_group_),
-    iterator_(NULL),
+    iterator_(),
     iterator_group_index_(0)
 {
     //Initialize max propensity vector
